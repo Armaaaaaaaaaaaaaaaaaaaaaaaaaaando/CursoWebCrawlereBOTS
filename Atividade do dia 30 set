@@ -1,0 +1,56 @@
+import requests
+from bs4 import BeautifulSoup
+
+#1: https://produto.mercadolivre.com.br/MLB-3318866513-camisa-fluminense-oficial-1-2324-umbro-_JM#is_advertising=true&position=2&search_layout=stack&type=pad&tracking_id=d830f11f-cf22-4a8f-ba16-731906f38fac&is_advertising=true&ad_domain=VQCATCORE_LST&ad_position=2&ad_click_id=ZGQ4MDBlNWUtZjRjOC00YTEzLWE4YzItNTgyZjdkMWRmYmNi
+#2 https://www.retrogol.com.br/idolos-eternos/camisa-fluminense-bordo-2022-masculina?parceiro=4473&parceiro=4376&gad=1&gclid=CjwKCAjw69moBhBgEiwAUFCx2NhStOo7R49HvDmM5vpx7nYolRYH-w_dK0Xz2jWkvwm57YoUsvnM0RoCNbEQAvD_BwE&variant_id=9866
+
+
+class Crawler:
+    # função chamada request_data
+    def request_data(self, url:str) -> 'BeautifulSoup':
+        # Solicitação get a url
+        response = requests.get(url)
+        
+        # Beautifulsoup transfere resposta para texto
+        soup = BeautifulSoup(response.text, 'html.parser')
+        
+        # Retorne o objeto BeautifulSoup resultante
+        return soup
+        
+
+    def extract_from_mercado_livre(self):
+        all_data = []
+        #Pega as inforns do site
+        raw_mercado = self.request_data('https://produto.mercadolivre.com.br/MLB-3318866513-camisa-fluminense-oficial-1-2324-umbro-_JM#is_advertising=true&position=2&search_layout=stack&type=pad&tracking_id=d830f11f-cf22-4a8f-ba16-731906f38fac&is_advertising=true&ad_domain=VQCATCORE_LST&ad_position=2&ad_click_id=ZGQ4MDBlNWUtZjRjOC00YTEzLWE4YzItNTgyZjdkMWRmYmNi')    
+        #a partir daqui, coleta nome, preço e descrição
+        products_name = raw_mercado.find('h1', {'class': 'ui-pdp-title'}).text
+        
+        #coleta preço, e edita 
+        products_price = raw_mercado.find('span',{'class':'andes-money-amount ui-pdp-price__part andes-money-amount--cents-superscript andes-money-amount--compact'}).text
+        partes = products_price.split("R$")
+        format_price = "R$"+partes[1]
+        
+        #coletar descrição, juntamente com um limitador de descrição
+        products_description = raw_mercado.find('p', {'class': 'ui-pdp-description__content'}).text
+        products_description = products_description.split()
+        new = []
+        for i in range (20):
+            new.append(products_description[i])
+        new = ' '.join(new)
+        
+
+
+        #organiza a informação coletada em uma data
+        data = {
+            'title': products_name,
+            'price': format_price,
+            'description': new
+        }
+
+        all_data.append(data)
+        print(all_data)
+
+
+if __name__ == "__main__":
+    crawler = Crawler()
+    crawler.extract_from_mercado_livre()
